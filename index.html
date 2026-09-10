@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ToxAI Organ Atlas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --paper:#FCFBF8; --surface:#FFFFFF; --surface-2:#F4F2EC;
+    --ink:#181A1E; --ink-2:#4B5058; --ink-3:#82868E;
+    --rule:#E4E1D8;
+
+    --clin:#C1485A; --clin-bg:#FBEAEC; --clin-deep:#7C2A38;
+    --aqua:#0E8FA3; --aqua-bg:#E6F5F6; --aqua-deep:#0B5F6E;
+    --food:#5A8A2E; --food-bg:#EBF3E2; --food-deep:#3C6A1C;
+
+    --hi:#C1485A; --hi-bg:#FBEAEC;
+    --md:#C58A1E; --md-bg:#FBF1DA;
+    --lo:#2E9179; --lo-bg:#E5F5EF;
+    --off:#DEDBD1;
+
+    --f-d:"Fraunces","Iowan Old Style",Georgia,serif;
+    --f-b:"IBM Plex Sans","Helvetica Neue",Arial,sans-serif;
+    --f-m:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --paper:#101114; --surface:#17191D; --surface-2:#1F2126;
+      --ink:#F1F0EC; --ink-2:#BEC1C6; --ink-3:#888D95;
+      --rule:#2C2F35;
+      --clin:#E08897; --clin-bg:#332226; --clin-deep:#F0AAB4;
+      --aqua:#4FC2D6; --aqua-bg:#132C30; --aqua-deep:#7EDBEA;
+      --food:#8FC65A; --food-bg:#20301A; --food-deep:#B6E38A;
+      --hi:#E08897; --hi-bg:#332226;
+      --md:#E2B455; --md-bg:#2E2717;
+      --lo:#5FCBAE; --lo-bg:#132C25;
+      --off:#2C2F35;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#101114; --surface:#17191D; --surface-2:#1F2126;
+    --ink:#F1F0EC; --ink-2:#BEC1C6; --ink-3:#888D95;
+    --rule:#2C2F35;
+    --clin:#E08897; --clin-bg:#332226; --clin-deep:#F0AAB4;
+    --aqua:#4FC2D6; --aqua-bg:#132C30; --aqua-deep:#7EDBEA;
+    --food:#8FC65A; --food-bg:#20301A; --food-deep:#B6E38A;
+    --hi:#E08897; --hi-bg:#332226;
+    --md:#E2B455; --md-bg:#2E2717;
+    --lo:#5FCBAE; --lo-bg:#132C25;
+    --off:#2C2F35;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--f-b);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .page{max-width:1040px;margin:0 auto;padding:0 22px 70px}
+
+  /* ---------------- hero ---------------- */
+  .hero{
+    margin:0 -22px 36px;
+    padding:52px 22px 40px;
+    background:
+      radial-gradient(680px 320px at 8% -10%, color-mix(in srgb, var(--clin) 20%, transparent), transparent 60%),
+      radial-gradient(680px 320px at 50% -10%, color-mix(in srgb, var(--food) 18%, transparent), transparent 60%),
+      radial-gradient(680px 320px at 92% -10%, color-mix(in srgb, var(--aqua) 20%, transparent), transparent 60%);
+    border-bottom:1px solid var(--rule);
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .tag{font-family:var(--f-m);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3)}
+  h1{font-family:var(--f-d);font-size:clamp(40px,6vw,58px);font-weight:600;letter-spacing:-.02em;margin:0;text-wrap:balance}
+  h1 .split{background:linear-gradient(92deg, var(--clin) 0%, var(--clin) 46%, var(--aqua) 54%, var(--aqua) 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent}
+  .lede{font-family:var(--f-d);font-style:italic;font-size:clamp(18px,2.4vw,22px);line-height:1.4;color:var(--ink-2);max-width:60ch;margin:2px 0 0}
+
+  /* ---------------- ecosystem switch ---------------- */
+  .switch{display:inline-flex;border:1.5px solid var(--ink);border-radius:999px;overflow:hidden;margin-top:16px;background:var(--surface)}
+  .switch button{
+    font-family:var(--f-b);font-weight:600;font-size:13.5px;
+    padding:10px 22px;border:none;background:transparent;color:var(--ink-2);cursor:pointer;
+    display:flex;align-items:center;gap:8px;transition:background .15s,color .15s;
+  }
+  .switch button svg{width:16px;height:16px;flex:0 0 auto}
+  .switch button.on.clin{background:var(--clin);color:#fff}
+  .switch button.on.aqua{background:var(--aqua);color:#fff}
+  .switch button.on.food{background:var(--food);color:#fff}
+  .switch button:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
+
+  /* ---------------- controls ---------------- */
+  .steps{display:grid;grid-template-columns:1fr 1fr auto;gap:14px;align-items:end;margin-bottom:20px}
+  @media(max-width:760px){.steps{grid-template-columns:1fr}}
+  .steps.compact{grid-template-columns:1fr auto}
+  @media(max-width:760px){.steps.compact{grid-template-columns:1fr}}
+  .step{display:flex;flex-direction:column;gap:7px}
+  .step .n{font-family:var(--f-m);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+  select{width:100%;font-family:var(--f-b);font-size:15px;padding:11px 12px;background:var(--surface);color:var(--ink);border:1.5px solid var(--rule);border-radius:10px}
+  select:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+  button.go{font-family:var(--f-b);font-size:15px;font-weight:700;padding:12px 28px;border:none;border-radius:10px;color:#fff;cursor:pointer;background:var(--acc);white-space:nowrap;box-shadow:0 6px 16px -8px color-mix(in srgb, var(--acc) 70%, transparent)}
+  button.go:hover{filter:brightness(1.08)}
+  .price{font-family:var(--f-m);font-size:11px;color:var(--ink-3);margin-top:6px}
+
+  .mol{display:flex;align-items:center;gap:14px;background:var(--surface);border:1.5px solid var(--rule);border-radius:14px;padding:14px 16px;margin-bottom:20px}
+  .mol .cls{font-family:var(--f-m);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--acc);font-weight:600}
+  .mol .sm{font-family:var(--f-m);font-size:11.5px;color:var(--ink-2);overflow-wrap:anywhere}
+
+  /* ---------------- verdict ---------------- */
+  .verdict{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px}
+  .vbox{padding:22px 20px;text-align:center;background:var(--surface);border:1.5px solid var(--rule);border-radius:16px;opacity:.35;transition:opacity .2s}
+  .vbox.on{opacity:1}
+  .vbox .lab{font-family:var(--f-d);font-size:30px;font-weight:600;letter-spacing:-.01em}
+  .vbox .sub{font-family:var(--f-m);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-top:2px}
+  .vbox.on.toxic{background:var(--hi-bg);border-color:var(--hi)} .vbox.on.toxic .lab{color:var(--hi)}
+  .vbox.on.safe{background:var(--lo-bg);border-color:var(--lo)}  .vbox.on.safe .lab{color:var(--lo)}
+  .abstain{background:var(--surface-2);border:2px dashed var(--ink-3);border-radius:16px;padding:24px 20px;text-align:center;margin-bottom:22px}
+  .abstain b{font-family:var(--f-d);font-size:24px;font-weight:600;display:block}
+  .abstain span{font-size:13.5px;color:var(--ink-2)}
+
+  .path{background:var(--surface);border:1.5px solid var(--rule);border-left:5px solid var(--acc);border-radius:14px;padding:16px 20px;margin-bottom:22px}
+  .path b{font-family:var(--f-d);font-size:17px;font-weight:600;color:var(--acc);display:block;margin-bottom:4px}
+  .path div{font-size:14px;color:var(--ink-2);line-height:1.55}
+  .path.idle{border-left-color:var(--ink-3)}
+  .path.idle b{color:var(--ink-3)}
+
+  /* ---------------- map ---------------- */
+  .maprow{display:grid;grid-template-columns:auto 1fr;gap:30px;align-items:start;background:var(--surface);border:1.5px solid var(--rule);border-radius:20px;padding:26px}
+  @media(max-width:760px){.maprow{grid-template-columns:1fr;gap:18px}}
+  .figure{display:flex;flex-direction:column;gap:12px;align-items:center}
+  .figure svg{width:230px;height:auto;display:block}
+  .figure.wide svg{width:380px;max-width:100%}
+  .legend{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;font-family:var(--f-m);font-size:10px;letter-spacing:.06em;text-transform:uppercase}
+  .legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+
+  .organ{cursor:pointer;transition:opacity .15s}
+  .organ:hover{opacity:.72}
+  .lbl{font-family:var(--f-m);font-size:8.5px;letter-spacing:.04em;fill:var(--ink-3)}
+
+  .findings{display:flex;flex-direction:column;gap:10px;min-width:0}
+  .findings h3{font-family:var(--f-m);font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);margin:0 0 2px;padding-bottom:9px;border-bottom:1.5px solid var(--rule)}
+  .find{display:grid;grid-template-columns:14px 1fr;gap:11px;padding:10px 0;border-bottom:1px solid var(--surface-2)}
+  .find:last-child{border-bottom:none}
+  .find .dot{width:11px;height:11px;border-radius:3px;margin-top:5px}
+  .find .o{font-weight:700;font-size:14.5px}
+  .find .d{font-size:13px;color:var(--ink-2)}
+  .find .r{font-family:var(--f-m);font-size:11px;color:var(--ink-3);margin-top:2px}
+  .none{font-size:14px;color:var(--ink-2)}
+
+  .disc{background:var(--surface-2);border-left:4px solid var(--acc);border-radius:10px;padding:14px 16px;font-size:12.5px;max-width:82ch;margin-top:26px}
+  .disc b{color:var(--acc)}
+  footer{border-top:1px solid var(--rule);padding-top:16px;margin-top:18px;font-size:11.5px;color:var(--ink-3);max-width:82ch}
+  @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="hero">
+    <span class="tag">One molecule · three worlds</span>
+    <h1>Tox<span class="split">AI</span> Organ Atlas</h1>
+    <p class="lede">The same molecule behaves differently in a patient, in a river, and across the food web that connects them. See all three, side by side, in one view.</p>
+    <div class="switch">
+      <button class="on clin" id="btnClin">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.6-7-10a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 5.4-7 10-7 10-1 0-2-.5-2-.5s-1 .5-2 .5z"/></svg>
+        Clinical · human
+      </button>
+      <button class="aqua" id="btnAqua">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12c2 2 4 3 6 0s4-3 6 0 4 3 6 0M2 17c2 2 4 3 6 0s4-3 6 0 4 3 6 0"/></svg>
+        Environmental · aquatic
+      </button>
+      <button class="food" id="btnFood">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 21c9 0 14-5 14-14 0-1 0-2-.3-3-6 1-10 4-12 9-1 2-1.5 5-1.7 8z"/><path d="M5 21c1-4 3-7 6-9"/></svg>
+        Ecosystem · food web
+      </button>
+    </div>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <span class="n">1 · Molecule</span>
+      <select id="mol"></select>
+    </div>
+    <div class="step" id="orgStep">
+      <span class="n" id="dimLabel">2 · Organism</span>
+      <select id="org"></select>
+    </div>
+    <div class="step">
+      <button class="go" id="go">Predict</button>
+      <span class="price">€100 per prediction</span>
+    </div>
+  </div>
+
+  <div class="mol" id="molcard"></div>
+
+  <div id="result"></div>
+
+  <div class="maprow">
+    <div class="figure">
+      <div id="figWrap"></div>
+      <div class="legend">
+        <span><i style="background:var(--hi)"></i>High</span>
+        <span><i style="background:var(--md)"></i>Moderate</span>
+        <span><i style="background:var(--lo)"></i>Low</span>
+        <span><i style="background:var(--off)"></i>No signal</span>
+      </div>
+    </div>
+    <div class="findings" id="findings"></div>
+  </div>
+
+  <div class="disc" id="disc"></div>
+
+  <footer id="foot"></footer>
+</div>
+
+<script>
+/* ================= reference data ================= */
+const ORGANS_H = {eyes:"Eyes",lungs:"Lungs",heart:"Heart",liver:"Liver",kidney:"Kidneys",gi:"GI tract",marrow:"Bone marrow",nerves:"Peripheral nerves",skin:"Skin"};
+const ORGANS_A = {brain:"Brain",gills:"Gills",liver:"Liver",kidney:"Kidney",gonad:"Gonad",skin:"Skin / lateral line",bladder:"Swim bladder"};
+
+const HUMAN = {
+  "Caffeine":{cls:"Methylxanthine, reference control",smiles:"CN1C=NC2=C1C(=O)N(C)C(=O)N2C",verdict:"safe",organs:{}},
+  "Metformin":{cls:"Biguanide, reference control",smiles:"CN(C)C(=N)NC(N)=N",verdict:"safe",organs:{kidney:{sev:1,d:"Accumulates in renal impairment",r:"contraindicated below eGFR 30"}}},
+  "Acetaminophen":{cls:"Analgesic, dose dependent hepatotoxin",smiles:"CC(=O)Nc1ccc(O)cc1",verdict:"toxic",organs:{liver:{sev:3,d:"Acute hepatic necrosis via NAPQI, glutathione depletion",r:"leading cause of acute liver failure"},kidney:{sev:1,d:"Acute tubular necrosis in overdose",r:"uncommon"}}},
+  "Diclofenac":{cls:"NSAID, DILIrank most-concern",smiles:"OC(=O)Cc1ccccc1Nc1c(Cl)cccc1Cl",verdict:"toxic",organs:{liver:{sev:2,d:"Reactive metabolite, mitochondrial injury",r:"ALT rise in 15% of users"},gi:{sev:3,d:"Ulceration and bleeding via COX-1 inhibition",r:"boxed warning"},kidney:{sev:2,d:"Reduced renal perfusion",r:"dose dependent"},heart:{sev:2,d:"Thrombotic cardiovascular events",r:"boxed warning"}}},
+  "MMAE (ADC payload)":{cls:"Tubulin inhibitor, auristatin",smiles:"ADC payload · structure withheld for length",verdict:"toxic",organs:{marrow:{sev:3,d:"Neutropenia via antimitotic action",r:"dose limiting"},nerves:{sev:3,d:"Peripheral sensory neuropathy",r:"cumulative, often irreversible"},liver:{sev:2,d:"Transaminase elevation after premature release",r:"10 to 56% across vedotin ADCs"},skin:{sev:2,d:"Rash, severe cutaneous reactions",r:"boxed warning, enfortumab vedotin"},gi:{sev:2,d:"Diarrhoea and nausea",r:"common"}}},
+  "MMAF (ADC payload)":{cls:"Tubulin inhibitor, charged auristatin",smiles:"ADC payload · structure withheld",verdict:"toxic",organs:{eyes:{sev:3,d:"Keratopathy, corneal microcysts",r:"boxed warning, belantamab mafodotin"},marrow:{sev:2,d:"Thrombocytopenia",r:"common"},liver:{sev:2,d:"AST elevation",r:"about 20% all grades"}}},
+  "DXd (ADC payload)":{cls:"Topoisomerase I inhibitor",smiles:"ADC payload · structure withheld",verdict:"toxic",organs:{lungs:{sev:3,d:"Interstitial lung disease, pneumonitis",r:"boxed warning"},marrow:{sev:3,d:"Neutropenia, anaemia",r:"grade 3+, common"},gi:{sev:3,d:"Nausea and vomiting",r:"highly emetogenic"},liver:{sev:2,d:"Transaminase elevation",r:"about 20% all grades"}}},
+  "Calicheamicin (ADC payload)":{cls:"Enediyne DNA cleaver",smiles:"Enediyne class · structure withheld",verdict:"toxic",organs:{liver:{sev:3,d:"Sinusoidal obstruction syndrome",r:"8 to 13% incidence, boxed warning"},marrow:{sev:3,d:"Prolonged myelosuppression",r:"dose limiting"}}}
+};
+
+const AQUA = {
+  "Caffeine (control)":{cls:"Municipal wastewater trace, low ecotoxicity",smiles:"CN1C=NC2=C1C(=O)N(C)C(=O)N2C",verdict:"safe",organs:{}},
+  "17α-ethinylestradiol (EE2)":{cls:"Synthetic oestrogen, contraceptive residue",smiles:"CC12CCC3C(C1CCC2(C#C)O)CCC4=CC(=O)CCC34C",verdict:"toxic",organs:{gonad:{sev:3,d:"Feminises males, induces vitellogenin, blocks spermatogenesis",r:"whole-lake dose of 5 to 6 ng/L collapsed a wild fathead minnow population, ELA experiment"},liver:{sev:2,d:"Vitellogenin overproduction taxes hepatic protein synthesis",r:"biomarker of oestrogenic exposure"}}},
+  "Chlorpyrifos":{cls:"Organophosphate insecticide",smiles:"CCOP(=S)(OCC)Oc1cc(Cl)c(Cl)cc1Cl",verdict:"toxic",organs:{brain:{sev:3,d:"Irreversible acetylcholinesterase inhibition",r:"disrupts neuromuscular signalling at low ppb"},gills:{sev:2,d:"Epithelial hyperplasia, impaired gas exchange",r:"secondary to systemic toxicity"},skin:{sev:1,d:"Impaired lateral line function alters swimming behaviour",r:"sublethal, behavioural"}}},
+  "Copper sulfate":{cls:"Algaecide and aquaculture antiparasitic",smiles:"[Cu+2].[O-]S(=O)(=O)[O-]",verdict:"toxic",organs:{gills:{sev:3,d:"Direct epithelial damage, ionoregulatory failure",r:"classic reference toxicant for acute fish bioassays"},liver:{sev:1,d:"Bioaccumulation with chronic exposure",r:"secondary"}}},
+  "PFOS":{cls:"Perfluoroalkyl substance, persistent",smiles:"OS(=O)(=O)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)F",verdict:"toxic",organs:{liver:{sev:3,d:"Hepatocyte hypertrophy, lipid accumulation",r:"documented in carp histopathology"},gonad:{sev:2,d:"Oestrogenic activity, altered vitellogenin",r:"chronic exposure in zebrafish"},kidney:{sev:1,d:"Reduced clearance, bioaccumulation",r:"persistent, does not degrade"}}},
+  "Bisphenol A":{cls:"Plasticiser, endocrine disruptor",smiles:"CC(C)(c1ccc(O)cc1)c1ccc(O)cc1",verdict:"toxic",organs:{gonad:{sev:2,d:"Vitellogenin induction in males, altered sex ratio",r:"low ppb effect levels reported"},liver:{sev:1,d:"Metabolic stress from endocrine signalling",r:"secondary"}}}
+};
+
+const SPECIES_ECO = {algae:"Algae",fish:"Fish",bird:"Birds",wheat:"Wheat",cow:"Cattle",human:"Humans"};
+
+const ECO = {
+  "Caffeine (control)":{cls:"Environmental trace contaminant, low ecotoxicity",smiles:"CN1C=NC2=C1C(=O)N(C)C(=O)N2C",verdict:"safe",
+    path:"Widely detected in surface water from wastewater effluent. No documented food-web transfer at environmental concentrations.",organs:{}},
+  "Diclofenac (veterinary NSAID)":{cls:"NSAID, veterinary formulation",smiles:"OC(=O)Cc1ccccc1Nc1c(Cl)cccc1Cl",verdict:"toxic",
+    path:"Given to cattle as a painkiller. Residues persist in the carcass after death. Scavenging birds feeding on the carcass absorb a fatal dose.",
+    organs:{cow:{sev:1,d:"Residue retained in tissue at slaughter or death",r:"standard veterinary dosing"},
+            bird:{sev:3,d:"Acute renal failure and visceral gout in scavengers",r:"driver of the South Asian Gyps vulture population collapse since the 1990s"}}},
+  "Atrazine (herbicide)":{cls:"Triazine herbicide, photosystem II inhibitor",smiles:"CCNc1nc(Cl)nc(NC(C)C)n1",verdict:"toxic",
+    path:"Applied to cropland. Runoff carries it into ponds and streams, where it suppresses algal photosynthesis; residue left in treated soil also injures the next rotational crop.",
+    organs:{algae:{sev:3,d:"Blocks photosystem II, halting photosynthesis",r:"effects reported at low parts-per-billion in surface water"},
+            wheat:{sev:2,d:"Soil carry-over injures sensitive rotational crops",r:"label-listed rotation restriction"}}},
+  "PFOS (perfluorooctane sulfonate)":{cls:"Perfluoroalkyl substance, persistent and bioaccumulative",smiles:"OS(=O)(=O)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)F",verdict:"toxic",
+    path:"Biosolids applied as fertiliser leave PFOS in the soil. Wheat and forage crops take it up; cattle grazing on that forage accumulate it in meat and milk; people eating the crops, meat and dairy are exposed from every branch at once.",
+    organs:{wheat:{sev:2,d:"Root uptake from contaminated soil",r:"documented on PFAS-impacted farmland"},
+            cow:{sev:3,d:"Accumulates in tissue and milk via contaminated forage",r:"led to dairy farm closures, Maine 2021 to 2022"},
+            fish:{sev:3,d:"Hepatocyte hypertrophy, lipid accumulation",r:"documented in carp histopathology"},
+            bird:{sev:2,d:"Bioaccumulates up the food chain in eggs and tissue",r:"persistent, does not degrade"},
+            human:{sev:2,d:"Bioaccumulates in blood and liver from dietary exposure",r:"detectable in nearly all tested adults"}}},
+  "Copper sulfate (algaecide)":{cls:"Algaecide and aquaculture antiparasitic",smiles:"[Cu+2].[O-]S(=O)(=O)[O-]",verdict:"toxic",
+    path:"Applied directly to ponds to control algae. It kills the algae it targets, and at the same concentrations damages the gills of fish sharing the water.",
+    organs:{algae:{sev:3,d:"Direct cellular toxicity, halts growth",r:"the intended effect of the treatment"},
+            fish:{sev:2,d:"Gill epithelial damage, ionoregulatory failure",r:"classic reference toxicant for acute fish bioassays"}}},
+  "Chlorpyrifos (insecticide)":{cls:"Organophosphate insecticide",smiles:"CCOP(=S)(OCC)Oc1cc(Cl)c(Cl)cc1Cl",verdict:"toxic",
+    path:"Sprayed on cropland. Runoff reaches streams and affects fish directly; treated fields expose foraging birds and grazing cattle to residue left on the crop.",
+    organs:{bird:{sev:3,d:"Acute acetylcholinesterase inhibition",r:"documented bird-kill incidents following field application"},
+            fish:{sev:3,d:"Irreversible acetylcholinesterase inhibition",r:"disrupts neuromuscular signalling at low ppb"},
+            cow:{sev:1,d:"Minor residue exposure via treated forage",r:"below acute threshold at labelled use rates"}}}
+};
+
+const SEV = {3:["hi","High"],2:["md","Moderate"],1:["lo","Low"]};
+const cvar = s => s===3?"var(--hi)":s===2?"var(--md)":"var(--lo)";
+
+/* ================= figures ================= */
+function humanSVG(){
+  return `<svg viewBox="0 0 300 560" role="img" aria-label="Human figure with organ map">
+    <g id="silhouette">
+      <circle cx="150" cy="40" r="26" fill="var(--surface-2)" stroke="var(--rule)"/>
+      <path d="M139,62 h22 v18 h-22 z" fill="var(--surface-2)" stroke="var(--rule)"/>
+      <path d="M113,80 Q150,72 187,80 L195,140 Q198,178 189,210 L185,280 Q150,290 115,280 L111,210 Q102,178 105,140 Z" fill="var(--surface-2)" stroke="var(--rule)"/>
+      <path d="M114,84 L99,92 L86,166 L80,236 L91,239 L100,168 L112,110 Z" fill="var(--surface-2)" stroke="var(--rule)"/>
+      <path d="M186,84 L201,92 L214,166 L220,236 L209,239 L200,168 L188,110 Z" fill="var(--surface-2)" stroke="var(--rule)"/>
+      <path d="M117,280 L112,376 L107,472 L105,548 L128,550 L132,472 L138,376 L143,284 Z" fill="var(--surface-2)" stroke="var(--rule)"/>
+      <path d="M183,280 L188,376 L193,472 L195,548 L172,550 L168,472 L162,376 L157,284 Z" fill="var(--surface-2)" stroke="var(--rule)"/>
+    </g>
+    <g class="organ" data-o="skin"><path id="o_skin" d="M113,80 Q150,72 187,80 L195,140 Q198,178 189,210 L185,280 Q150,290 115,280 L111,210 Q102,178 105,140 Z" fill="none" stroke="var(--off)" stroke-width="4" stroke-dasharray="5 4"/></g>
+    <g class="organ" data-o="eyes"><circle id="o_eyes_a" cx="139" cy="37" r="5.5" fill="var(--off)"/><circle id="o_eyes_b" cx="161" cy="37" r="5.5" fill="var(--off)"/></g>
+    <g class="organ" data-o="lungs"><path id="o_lungs_a" d="M141,96 Q125,98 121,116 Q118,136 127,146 Q139,148 142,135 Z" fill="var(--off)"/><path id="o_lungs_b" d="M159,96 Q175,98 179,116 Q182,136 173,146 Q161,148 158,135 Z" fill="var(--off)"/></g>
+    <g class="organ" data-o="heart"><path id="o_heart" d="M150,122 q-8,-9 -15,-2 q-5,6 2,14 l13,13 l13,-13 q7,-8 2,-14 q-7,-7 -15,2 z" fill="var(--off)"/></g>
+    <g class="organ" data-o="liver"><path id="o_liver" d="M115,152 Q140,145 165,152 Q171,165 163,176 Q140,183 118,177 Q111,165 115,152 Z" fill="var(--off)"/></g>
+    <g class="organ" data-o="kidney"><ellipse id="o_kid_a" cx="123" cy="190" rx="6.5" ry="10" fill="var(--off)"/><ellipse id="o_kid_b" cx="177" cy="190" rx="6.5" ry="10" fill="var(--off)"/></g>
+    <g class="organ" data-o="gi"><path id="o_gi" d="M137,188 q20,-6 30,6 q6,11 -6,15 q-14,4 -16,13 q-2,11 11,13 q17,2 19,13 q2,13 -17,15 q-16,2 -24,-6" fill="none" stroke="var(--off)" stroke-width="8" stroke-linecap="round"/></g>
+    <g class="organ" data-o="marrow"><path id="o_pelvis" d="M121,258 Q150,267 179,258 L175,277 Q150,284 125,277 Z" fill="var(--off)"/><path id="o_fem_a" d="M129,286 L125,354" stroke="var(--off)" stroke-width="7" stroke-linecap="round" fill="none"/><path id="o_fem_b" d="M171,286 L175,354" stroke="var(--off)" stroke-width="7" stroke-linecap="round" fill="none"/></g>
+    <g class="organ" data-o="nerves"><path id="o_nv_a" d="M110,100 L96,162 L90,224" stroke="var(--off)" stroke-width="3.2" fill="none" stroke-linecap="round"/><path id="o_nv_b" d="M190,100 L204,162 L210,224" stroke="var(--off)" stroke-width="3.2" fill="none" stroke-linecap="round"/><path id="o_nv_c" d="M127,372 L121,454 L119,518" stroke="var(--off)" stroke-width="3.2" fill="none" stroke-linecap="round"/><path id="o_nv_d" d="M173,372 L179,454 L181,518" stroke="var(--off)" stroke-width="3.2" fill="none" stroke-linecap="round"/></g>
+    <text class="lbl" x="196" y="40">EYES</text>
+    <text class="lbl" x="228" y="118">LUNGS</text>
+    <text class="lbl" x="228" y="134">HEART</text>
+    <text class="lbl" x="26" y="164">LIVER</text>
+    <text class="lbl" x="228" y="190">KIDNEY</text>
+    <text class="lbl" x="228" y="226">GI TRACT</text>
+    <text class="lbl" x="12" y="270">MARROW</text>
+    <text class="lbl" x="232" y="270">NERVES</text>
+    <text class="lbl" x="18" y="108">SKIN</text>
+  </svg>`;
+}
+
+function fishSVG(){
+  return `<svg viewBox="0 0 380 230" role="img" aria-label="Fish figure with organ map">
+    <g id="silhouette" transform="translate(30,15)">
+      <path d="M40,100 C40,60 100,38 175,38 C235,38 275,66 300,100 C275,134 235,162 175,162 C100,162 40,140 40,100 Z" fill="var(--surface-2)" stroke="var(--rule)"/>
+      <path d="M300,100 L320,74 L320,126 Z" fill="var(--surface-2)" stroke="var(--rule)"/>
+      <path d="M150,38 L172,14 L196,38 Z" fill="var(--surface-2)" stroke="var(--rule)"/>
+      <path d="M155,162 L176,186 L198,162 Z" fill="var(--surface-2)" stroke="var(--rule)"/>
+      <path d="M120,58 L104,34 L134,52 Z" fill="var(--surface-2)" stroke="var(--rule)"/>
+      <path d="M120,142 L104,166 L134,148 Z" fill="var(--surface-2)" stroke="var(--rule)"/>
+      <path d="M40,100 Q90,96 175,100 Q235,102 300,100" fill="none" stroke="var(--rule)" stroke-width="1"/>
+    </g>
+    <g class="organ" data-o="brain"><circle id="o_brain" cx="248" cy="77" r="11" fill="var(--off)"/></g>
+    <g class="organ" data-o="gills"><path id="o_gills" d="M205,73 Q219,115 205,157" fill="none" stroke="var(--off)" stroke-width="9" stroke-linecap="round"/></g>
+    <g class="organ" data-o="liver"><path id="o_liver_f" d="M148,89 Q175,81 195,93 Q200,107 188,115 Q162,121 146,111 Q142,99 148,89 Z" fill="var(--off)"/></g>
+    <g class="organ" data-o="kidney"><path id="o_kidney_f" d="M120,68 Q180,60 225,68" fill="none" stroke="var(--off)" stroke-width="4.5" stroke-linecap="round"/></g>
+    <g class="organ" data-o="gonad"><ellipse id="o_gonad" cx="168" cy="143" rx="26" ry="11" fill="var(--off)"/></g>
+    <g class="organ" data-o="bladder"><ellipse id="o_bladder" cx="205" cy="52" rx="15" ry="6.5" fill="var(--off)" opacity=".85"/></g>
+    <g class="organ" data-o="skin"><path id="o_skin_f" d="M70,115 C70,75 130,53 205,53 C265,53 305,81 330,115 C305,149 265,177 205,177 C130,177 70,155 70,115 Z" fill="none" stroke="var(--off)" stroke-width="3.5" stroke-dasharray="5 4"/></g>
+
+    <line x1="253" y1="68" x2="300" y2="22" stroke="var(--ink-3)" stroke-width="1"/>
+    <text class="lbl" x="304" y="18" text-anchor="start">BRAIN</text>
+
+    <line x1="219" y1="115" x2="270" y2="115" stroke="var(--ink-3)" stroke-width="1"/>
+    <text class="lbl" x="276" y="119" text-anchor="start">GILLS</text>
+
+    <line x1="150" y1="90" x2="100" y2="72" stroke="var(--ink-3)" stroke-width="1"/>
+    <text class="lbl" x="97" y="68" text-anchor="end">LIVER</text>
+
+    <line x1="178" y1="63" x2="150" y2="24" stroke="var(--ink-3)" stroke-width="1"/>
+    <text class="lbl" x="150" y="18" text-anchor="middle">KIDNEY</text>
+
+    <line x1="150" y1="143" x2="100" y2="160" stroke="var(--ink-3)" stroke-width="1"/>
+    <text class="lbl" x="97" y="164" text-anchor="end">GONAD</text>
+
+    <line x1="203" y1="46" x2="220" y2="20" stroke="var(--ink-3)" stroke-width="1"/>
+    <text class="lbl" x="222" y="16" text-anchor="start">SWIM BLADDER</text>
+
+    <line x1="100" y1="96" x2="80" y2="205" stroke="var(--ink-3)" stroke-width="1"/>
+    <text class="lbl" x="80" y="216" text-anchor="middle">LATERAL LINE</text>
+  </svg>`;
+}
+
+function ecoSVG(){
+  return `<svg viewBox="0 0 460 260" role="img" aria-label="Food web diagram with algae, fish, birds, wheat, cattle and humans">
+    <defs>
+      <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 Z" fill="var(--ink-3)"/>
+      </marker>
+    </defs>
+
+    <g fill="none" stroke="var(--ink-3)" stroke-width="1.3" marker-end="url(#arrow)" opacity=".8">
+      <path d="M55,201 L55,169"/>
+      <path d="M82,127 L193,52"/>
+      <path d="M87,139 L376,87"/>
+      <path d="M259,196 L338,175"/>
+      <path d="M257,189 L383,98"/>
+      <path d="M389,144 L399,100"/>
+      <path d="M338,144 L240,53"/>
+    </g>
+
+    <g class="organ" data-o="algae" transform="translate(55,225)">
+      <path d="M-14,15 Q-18,-5 -10,-25 Q-6,-35 -12,-45" fill="none" stroke="var(--off)" stroke-width="5" stroke-linecap="round"/>
+      <path d="M0,15 Q4,-8 -2,-30 Q-4,-42 4,-52" fill="none" stroke="var(--off)" stroke-width="5" stroke-linecap="round"/>
+      <path d="M14,15 Q20,-5 12,-24 Q8,-34 16,-44" fill="none" stroke="var(--off)" stroke-width="5" stroke-linecap="round"/>
+      <ellipse cx="0" cy="18" rx="22" ry="5" fill="var(--off)" opacity=".55"/>
+    </g>
+
+    <g class="organ" data-o="fish" transform="translate(55,145)">
+      <path d="M-22,0 C-22,-14 -6,-20 12,-14 C22,-10 28,-2 34,0 C28,2 22,10 12,14 C-6,20 -22,14 -22,0 Z" fill="var(--off)"/>
+      <path d="M28,-4 L38,-10 L38,10 L28,4 Z" fill="var(--off)"/>
+    </g>
+
+    <g class="organ" data-o="bird" transform="translate(215,35)">
+      <path d="M-30,6 Q-16,-14 0,2 Q16,-14 30,6 Q16,-2 0,10 Q-16,-2 -30,6 Z" fill="var(--off)"/>
+    </g>
+
+    <g class="organ" data-o="wheat" transform="translate(240,225)">
+      <path d="M0,20 L0,-40" stroke="var(--off)" stroke-width="3" fill="none"/>
+      <ellipse cx="-7" cy="-34" rx="5" ry="9" fill="var(--off)" transform="rotate(-30 -7 -34)"/>
+      <ellipse cx="7" cy="-34" rx="5" ry="9" fill="var(--off)" transform="rotate(30 7 -34)"/>
+      <ellipse cx="-8" cy="-20" rx="5" ry="9" fill="var(--off)" transform="rotate(-30 -8 -20)"/>
+      <ellipse cx="8" cy="-20" rx="5" ry="9" fill="var(--off)" transform="rotate(30 8 -20)"/>
+      <ellipse cx="-8" cy="-6" rx="5" ry="9" fill="var(--off)" transform="rotate(-30 -8 -6)"/>
+      <ellipse cx="8" cy="-6" rx="5" ry="9" fill="var(--off)" transform="rotate(30 8 -6)"/>
+    </g>
+
+    <g class="organ" data-o="cow" transform="translate(365,165)">
+      <rect x="-32" y="-14" width="46" height="24" rx="10" fill="var(--off)"/>
+      <circle cx="20" cy="-14" r="12" fill="var(--off)"/>
+      <path d="M12,-24 L6,-32 L16,-28 Z" fill="var(--off)"/>
+      <rect x="-26" y="8" width="6" height="16" fill="var(--off)"/>
+      <rect x="-10" y="8" width="6" height="16" fill="var(--off)"/>
+      <rect x="6" y="8" width="6" height="16" fill="var(--off)"/>
+      <rect x="20" y="8" width="6" height="16" fill="var(--off)"/>
+      <path d="M-32,-4 L-40,4" stroke="var(--off)" stroke-width="3" stroke-linecap="round" fill="none"/>
+    </g>
+
+    <g class="organ" data-o="human" transform="translate(400,80)">
+      <circle cx="0" cy="-28" r="9" fill="var(--off)"/>
+      <path d="M-14,-16 Q0,-22 14,-16 L18,10 L8,10 L4,32 L-4,32 L-8,10 L-18,10 Z" fill="var(--off)"/>
+    </g>
+
+    <text class="lbl" x="55" y="256" text-anchor="middle">ALGAE</text>
+    <text class="lbl" x="55" y="180" text-anchor="middle">FISH</text>
+    <text class="lbl" x="215" y="60" text-anchor="middle">BIRDS</text>
+    <text class="lbl" x="240" y="256" text-anchor="middle">WHEAT</text>
+    <text class="lbl" x="365" y="202" text-anchor="middle">CATTLE</text>
+    <text class="lbl" x="400" y="126" text-anchor="middle">HUMANS</text>
+  </svg>`;
+}
+
+/* ================= state ================= */
+let ecosystem = "clin";
+let current, organism, abstain = false, predicted = false;
+
+const DIMS = {
+  clin:{data:HUMAN, organs:ORGANS_H, dims:["Human","Rat","Dog"], svg:humanSVG, acc:"--clin", label:"Organism", note:"human clinical toxicity profiles and product labelling", defaultIdx:4,
+        speciesNote:"Organ maps are calibrated on human clinical data only. Rat and dog target organs diverge, which is why over 90% of drugs that clear animal studies never reach approval."},
+  aqua:{data:AQUA, organs:ORGANS_A, dims:["Fathead minnow","Zebrafish","Rainbow trout"], svg:fishSVG, acc:"--aqua", label:"Species", note:"published freshwater ecotoxicology studies", defaultIdx:1,
+        speciesNote:"Sensitivity varies by species and life stage; effect concentrations shown are order-of-magnitude reference points, not species-specific values."},
+  eco:{data:ECO, organs:SPECIES_ECO, dims:["Food web"], svg:ecoSVG, acc:"--food", label:"Food web", note:"published environmental fate and food-web exposure studies", defaultIdx:3, hideOrganism:true,
+       speciesNote:""}
+};
+
+function setAcc(){
+  document.documentElement.style.setProperty("--acc", `var(${DIMS[ecosystem].acc})`);
+}
+
+function populate(){
+  const D = DIMS[ecosystem];
+  const msel = document.getElementById("mol");
+  msel.innerHTML = Object.keys(D.data).map(k=>`<option>${k}</option>`).join("");
+  current = Object.keys(D.data)[ D.defaultIdx ?? 0 ];
+  msel.value = current;
+  const osel = document.getElementById("org");
+  osel.innerHTML = D.dims.map(k=>`<option>${k}</option>`).join("");
+  organism = D.dims[0];
+  document.getElementById("dimLabel").textContent = "2 · " + D.label;
+  document.getElementById("orgStep").style.display = D.hideOrganism ? "none" : "";
+  document.querySelector(".steps").classList.toggle("compact", !!D.hideOrganism);
+  document.getElementById("figWrap").innerHTML = D.svg();
+  document.querySelector(".figure").classList.toggle("wide", ecosystem==="eco");
+  attachOrganClicks();
+}
+
+function attachOrganClicks(){
+  document.querySelectorAll("#figWrap .organ").forEach(g=>{
+    g.onclick = () => {
+      const D = DIMS[ecosystem];
+      const name = D.organs[g.dataset.o];
+      const row = [...document.querySelectorAll(".find .o")].find(el=>el.textContent.trim().startsWith(name));
+      if(row) row.closest(".find").scrollIntoView({block:"center",behavior:"smooth"});
+    };
+  });
+}
+
+function paintBody(organs){
+  document.querySelectorAll("#figWrap .organ").forEach(g=>{
+    const hit = organs[g.dataset.o];
+    const col = hit ? cvar(hit.sev) : "var(--off)";
+    g.querySelectorAll("path,circle,ellipse,rect").forEach(el=>{
+      if(el.getAttribute("fill")==="none") el.setAttribute("stroke",col);
+      else el.setAttribute("fill",col);
+    });
+  });
+}
+
+/* the molecule card describes the INPUT, so it updates as soon as you pick one */
+function renderMolCard(){
+  const m = DIMS[ecosystem].data[current];
+  document.getElementById("molcard").innerHTML = `
+    <svg width="44" height="44" viewBox="0 0 46 46" aria-hidden="true">
+      <polygon points="15,12 26,12 31,22 26,32 15,32 10,22" fill="none" stroke="var(--acc)" stroke-width="1.8"/>
+      <line x1="31" y1="22" x2="40" y2="22" stroke="var(--acc)" stroke-width="1.8"/>
+      <circle cx="40" cy="22" r="3" fill="var(--acc)"/>
+    </svg>
+    <div><div class="cls">${m.cls}</div><div class="sm">${m.smiles}</div></div>`;
+}
+
+/* no answer on screen until Predict is pressed, and any input change returns here,
+   so a stale map can never sit under a molecule it was not computed for */
+function idleState(){
+  predicted = false;
+  const D = DIMS[ecosystem];
+  document.getElementById("result").innerHTML = D.hideOrganism
+    ? `<div class="path idle"><b>No prediction yet</b><div>Press Predict to trace the exposure pathway for this molecule.</div></div>`
+    : `<div class="verdict">
+        <div class="vbox toxic"><div class="lab">Toxic</div><div class="sub">—</div></div>
+        <div class="vbox safe"><div class="lab">Non toxic</div><div class="sub">—</div></div>
+      </div>`;
+  paintBody({});
+  document.getElementById("findings").innerHTML =
+    `<h3>Findings</h3><p class="none">No prediction yet. Press <b>Predict</b> to see which ${
+      D.hideOrganism ? "species this molecule reaches" : "organs are at risk"}.</p>`;
+}
+
+function predict(){
+  predicted = true;
+  renderResult();
+}
+
+function renderResult(){
+  const D = DIMS[ecosystem];
+  const m = D.data[current];
+  const res = document.getElementById("result");
+  const fnd = document.getElementById("findings");
+
+  if(abstain){
+    res.innerHTML = `<div class="abstain"><b>No answer given</b><span>Outside the applicability domain — the system will not guess.</span></div>`;
+    paintBody({});
+    fnd.innerHTML = `<h3>Findings</h3><p class="none">No organ map, because no prediction was made.</p>`;
+    return;
+  }
+
+  const toxic = m.verdict === "toxic";
+
+  if(D.hideOrganism){
+    res.innerHTML = `<div class="path"><b>${toxic?"Exposure pathway identified":"No exposure pathway identified"}</b><div>${m.path}</div></div>`;
+  } else {
+    res.innerHTML = `<div class="verdict">
+      <div class="vbox toxic${toxic?" on":""}"><div class="lab">Toxic</div><div class="sub">${toxic?"predicted":"—"}</div></div>
+      <div class="vbox safe${toxic?"":" on"}"><div class="lab">Non toxic</div><div class="sub">${toxic?"—":"at reference exposure"}</div></div>
+    </div>`;
+  }
+
+  const primary = D.hideOrganism ? true : organism === D.dims[0];
+  const shown = primary ? m.organs : {};
+  paintBody(shown);
+
+  if(!primary){
+    fnd.innerHTML = `<h3>Findings</h3><p class="none">${D.speciesNote} Switch back to ${D.dims[0]} to see the map.</p>`;
+    return;
+  }
+
+  const list = Object.entries(shown).sort((a,b)=>b[1].sev-a[1].sev);
+  fnd.innerHTML = `<h3>Findings · ${list.length || "none"}</h3>` + (list.length
+    ? list.map(([k,v])=>`
+        <div class="find">
+          <span class="dot" style="background:${cvar(v.sev)}"></span>
+          <div>
+            <div class="o">${D.organs[k]} <span style="font-family:var(--f-m);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:${cvar(v.sev)}">${SEV[v.sev][1]}</span></div>
+            <div class="d">${v.d}</div>
+            <div class="r">${v.r}</div>
+          </div>
+        </div>`).join("")
+    : `<p class="none">No target-organ toxicity documented at reference exposure. This is what a clean molecule looks like in this view.</p>`);
+}
+
+function setDisc(){
+  const D = DIMS[ecosystem];
+  document.getElementById("disc").innerHTML = D.hideOrganism
+    ? `<b>Demonstration only.</b> Food-web pathways are curated from ${D.note}, not model output. Nothing here is a prediction, and no model performance is claimed.`
+    : `<b>Demonstration only.</b> Organ maps are curated from ${D.note}, not model output. Nothing here is a prediction, and no model performance is claimed.`;
+  document.getElementById("foot").textContent = ecosystem==="clin"
+    ? "Sources: product labels and prescribing information; Frontiers in Pharmacology 2025 review of ADC hepatotoxicity; FDA DILIrank 2.0."
+    : ecosystem==="aqua"
+    ? "Sources: Kidd et al. 2007, PNAS, whole-lake EE2 exposure and fathead minnow population collapse; peer-reviewed freshwater ecotoxicology on chlorpyrifos, copper, PFOS and bisphenol A."
+    : "Sources: Oaks et al. 2004 and Green et al. 2004 on veterinary diclofenac and Gyps vulture population decline; U.S. EPA and university extension reporting on PFAS biosolids contamination of Maine dairy farms, 2021 to 2022; peer-reviewed ecotoxicology on atrazine, copper sulfate and chlorpyrifos.";
+}
+
+function switchEcosystem(next){
+  ecosystem = next; abstain = false;
+  document.getElementById("btnClin").classList.toggle("on", next==="clin");
+  document.getElementById("btnAqua").classList.toggle("on", next==="aqua");
+  document.getElementById("btnFood").classList.toggle("on", next==="eco");
+  setAcc(); populate(); setDisc(); renderMolCard(); idleState();
+}
+
+document.getElementById("btnClin").onclick = ()=>switchEcosystem("clin");
+document.getElementById("btnAqua").onclick = ()=>switchEcosystem("aqua");
+document.getElementById("btnFood").onclick = ()=>switchEcosystem("eco");
+document.getElementById("mol").onchange = e=>{ current=e.target.value; abstain=false; renderMolCard(); idleState(); };
+document.getElementById("org").onchange = e=>{ organism=e.target.value; idleState(); };
+document.getElementById("go").onclick = predict;
+
+setAcc(); populate(); setDisc(); renderMolCard(); idleState();
+</script>
+</body>
+</html>
